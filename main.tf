@@ -15,3 +15,19 @@ resource "azurerm_storage_account" "example" {
     environment = "staging"
   }
 }
+
+resource "azurerm_virtual_network" "demo" {
+
+  name                = "vnet-drift-demo"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+
+  address_space = [
+    "10.0.0.0/16"
+  ]
+
+  tags = {
+    environment = "staging"
+    owner       = "terraform"
+  }
+}
