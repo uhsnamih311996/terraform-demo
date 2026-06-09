@@ -8,6 +8,7 @@ jobs:
   terraform:
 
     runs-on: self-hosted
+    environment: Production
 
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
