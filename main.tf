@@ -1,7 +1,3 @@
-resource "azurerm_resource_group" "example" {
-  name     = "ContosoRG"
-  location = "South India"
-}
 resource "azurerm_storage_account" "example" {
   name                     = "demotfstrg01"
   resource_group_name      = "ContosoRG"
