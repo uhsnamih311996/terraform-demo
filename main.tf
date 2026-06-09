@@ -1,3 +1,4 @@
+/*
 resource "azurerm_resource_group" "example" {
   name     = "ContosoRG"
   location = "South India"
@@ -31,3 +32,4 @@ resource "azurerm_virtual_network" "demo" {
     owner       = "terraform"
   }
 }
+*/
