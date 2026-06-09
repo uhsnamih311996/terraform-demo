@@ -1,0 +1,75 @@
+name: Terraform Drift Detection
+
+on:
+  workflow_dispatch
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+
+  drift-check:
+
+    runs-on: self-hosted
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Detect Drift
+        id: drift
+        shell: bash
+        run: |
+
+          terraform plan -detailed-exitcode -no-color > drift-report.txt
+
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -eq 2 ]; then
+
+            echo "drift=true" >> $GITHUB_OUTPUT
+
+            echo "## 🚨 Drift Detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Terraform detected infrastructure drift." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Repository: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+            echo "Run ID: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+
+          else
+
+            echo "drift=false" >> $GITHUB_OUTPUT
+
+            echo "## ✅ No Drift Detected" >> $GITHUB_STEP_SUMMARY
+
+          fi
+
+      - name: Upload Drift Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-report
+          path: drift-report.txt
+
+      - name: Create GitHub Issue
+        if: steps.drift.outputs.drift == 'true'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Terraform Drift Detected"
+          content-filepath: drift-report.txt
+          labels: |
+            terraform
+            drift
